@@ -24,8 +24,8 @@ app.use(cookieParser())
 app.use(bodyParser.urlencoded({extended: true}))
 
 app.use(session({
-    key: "username",
-    secret: "cookie",
+    key: "userId",
+    secret: "codeRouge004DeltaCobra",
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -53,7 +53,7 @@ app.post('/register', (req, res) => {
             [username, hash],
             (err, result) => {
                 err ? res.send({err: err}) : null;
-                result ? res.send({message: "Vous êtes bien enregistré"}) : null;
+                result ? res.send({message: "Bienvenue " + username + " ! Votre compte a bien été créé !"}) : null;
             }
         )
     })
@@ -73,17 +73,21 @@ app.post('/login', (req, res) => {
             result.length > 0 ? bcrypt.compare(password, result[0].password, (error, response) => {
                 if (response) {
                     req.session.user = result
-                    res.send(result)
+                    res.send({message: "Bienvenue " + username + " !"})
                 } else {
-                    res.send({message: "Login ou mot de passe invalide !"})
+                    res.send({messageErr: "Erreur : Utilisateur ou mot de passe invalide !"})
                 }
-            }) : res.send({message: "Utilisateur non connu !"});
+            }) : res.send({messageErr: "Erreur : Utilisateur non reconnu !"});
         }
     )
 })
 
 app.post('/logout', (req, res) => {
-    req.session.user = null;
+    if (req.session.user) {
+        res.clearCookie('userId');
+        req.session.destroy();
+        res.send({loggedIn: false})
+    }
 })
 
 app.get('/login', (req, res) => {
