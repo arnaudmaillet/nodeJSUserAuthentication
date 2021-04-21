@@ -33,12 +33,20 @@ app.use(session({
     }
 }))
 
-// DataBase connection
-const db = mysql.createConnection({
+// loginsystem DataBase connection
+const loginsystemDatabase = mysql.createConnection({
     user: "root",
     host: "localhost",
     password: "",
     database: "loginsystem"
+})
+
+// Skills DataBase connection
+const skillsDatabase = mysql.createConnection({
+    user: "root",
+    host: "localhost",
+    password: "",
+    database: "basecompetencessio"
 })
 
 
@@ -48,12 +56,11 @@ app.post('/register', (req, res) => {
     const password = req.body.password
 
     bcrypt.hash(password, salt, (err, hash) => {
-        db.query(
+        loginsystemDatabase.query(
             "INSERT INTO user (username, password) VALUES (?,?)",
             [username, hash],
             (err, result) => {
-                err ? res.send({err: err}) : null;
-                result ? res.send({message: "Bienvenue " + username + " ! Votre compte a bien été créé !"}) : null;
+                result ? res.send({message: "Bienvenue " + username + " ! Votre compte a bien été créé !"}) : res.send({err: err});
             }
         )
     })
@@ -65,7 +72,7 @@ app.post('/login', (req, res) => {
     const username = req.body.username
     const password = req.body.password
 
-    db.query(
+    loginsystemDatabase.query(
         "SELECT username, password FROM user WHERE username = ?;",
         username,
         (err, result) => {
@@ -86,12 +93,25 @@ app.post('/logout', (req, res) => {
     if (req.session.user) {
         res.clearCookie('userId');
         req.session.destroy();
-        res.send({loggedIn: false})
+        res.send({loggedIn: false, message: "Vous être bien déconnecté. A bientôt !"})
+    } else {
+        res.send({message: "Erreur : Veuillez essayer de vous reconnecter !"})
     }
 })
 
 app.get('/login', (req, res) => {
     req.session.user ? res.send({loggedIn: true, user: req.session.user}) : res.send({loggedIn: false})
+})
+
+
+// SkillsArray
+app.get('/SkillsArray', async(req, res) => {
+    skillsDatabase.query(
+        "Select libProc, libDom, libAct from processus, domaine, activite where activite.numProc = processus.numProc and activite.numDom = domaine.numDom",
+        (err, data) => {
+            (data) ? res.json({data}) : res.send({err: err});
+        }
+    )
 })
 
 
