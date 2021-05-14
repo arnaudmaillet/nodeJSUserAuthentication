@@ -93,7 +93,7 @@ app.post('/logout', (req, res) => {
     if (req.session.user) {
         res.clearCookie('userId');
         req.session.destroy();
-        res.send({loggedIn: false, message: "Vous être bien déconnecté. A bientôt !"})
+        res.send({loggedIn: false, message: "Vous êtes bien déconnecté. A bientôt !"})
     } else {
         res.send({message: "Erreur : Veuillez essayer de vous reconnecter !"})
     }
@@ -105,15 +105,84 @@ app.get('/login', (req, res) => {
 
 
 // SkillsArray
-app.get('/SkillsArray', async(req, res) => {
+app.get('/skillsArray', (req, res) => {
     skillsDatabase.query(
-        "Select libProc, libDom, libAct from processus, domaine, activite where activite.numProc = processus.numProc and activite.numDom = domaine.numDom",
-        (err, data) => {
-            (data) ? res.json({data}) : res.send({err: err});
+        "Select numProc, libProc from processus",
+        (err, rowsProc) => {
+            let response = [];
+            let obj2;
+            if(rowsProc){
+                rowsProc.map(proc => {
+                    let promiseProc = new Promise ((resolve, reject) => {
+                        skillsDatabase.query(
+                            "Select domaine.numDom, libDom from processus, domaine where domaine.numProc = processus.numProc and processus.numProc = " + proc.numProc,
+                            (err, rowsDom) => {
+                                if(rowsDom){
+                                    rowsDom.map(dom => {
+                                        let promiseDom = new Promise((resolve, reject) => {
+                                            skillsDatabase.query(
+                                                "Select distinct processus.numProc, domaine.numDom, numAct, libAct from processus, domaine, activite where activite.numDom = domaine.numDom and activite.numProc = processus.numProc and processus.numProc = " + proc.numProc + " and domaine.numDom = " + dom.numDom,
+                                                (err, rowsAct) => {
+                                                    result = {domaine : dom, activites : [...rowsAct]}
+                                                    resolve(result)
+                                                    
+                                                },
+                                            )
+                                        });
+                                        return promiseDom.then((result) => {
+                                            obj2 = result
+                                        }).then(() => {
+                                            response.push(obj2)
+                                        })
+                                    })
+                                } else {
+
+                                }
+                                console.log(response);
+                                let obj = {processus : proc, domaines : obj2}
+                                
+                                
+                                resolve(rowsDom)
+                            }
+                        );
+                    });
+                    return promiseProc.then((result) => {
+                        //console.log(response);
+                    }).then(()=>{
+                        //console.log(response);
+                    })
+                });
+                //response.push(rowsProc)
+                //console.log(rows);
+            } else {
+                res.send({err: err})
+            }    
         }
     )
 })
 
+// app.get('/skillsArray', (req, res) => {
+//     skillsDatabase.query(
+//         "Select libProc, libDom, libAct from processus, domaine, activite where activite.numProc = processus.numProc and activite.numDom = domaine.numDom",
+//         (err, data) => {           
+//             (data) ? res.json({data}) : res.send({err: err});
+//         }
+//     )
+// })
+
+
+app.get('/projects', (req, res) => {
+    skillsDatabase.query(
+        "Select id, libelle from projet",
+        (err, data) => {
+            (data) ? res.json({data}) : res.send({err: err})
+        }
+    )
+})
+
+app.post('/skillsArray', (req, res) => {
+
+})
 
 // Port output config
 app.listen(3003, ()=>{
