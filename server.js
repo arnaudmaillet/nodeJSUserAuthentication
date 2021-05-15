@@ -21,7 +21,7 @@ app.use(cors({
     credentials: true
 }));
 app.use(cookieParser())
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }))
 
 app.use(session({
     key: "userId",
@@ -46,7 +46,8 @@ const skillsDatabase = mysql.createConnection({
     user: "root",
     host: "localhost",
     password: "",
-    database: "basecompetencessio"
+    database: "basecompetencessio",
+    multipleStatements: true
 })
 
 
@@ -60,7 +61,7 @@ app.post('/register', (req, res) => {
             "INSERT INTO user (username, password) VALUES (?,?)",
             [username, hash],
             (err, result) => {
-                result ? res.send({message: "Bienvenue " + username + " ! Votre compte a bien été créé !"}) : res.send({err: err});
+                result ? res.send({ message: "Bienvenue " + username + " ! Votre compte a bien été créé !" }) : res.send({ err: err });
             }
         )
     })
@@ -76,15 +77,15 @@ app.post('/login', (req, res) => {
         "SELECT username, password FROM user WHERE username = ?;",
         username,
         (err, result) => {
-            err ? res.send({err: err}) : null;
+            err ? res.send({ err: err }) : null;
             result.length > 0 ? bcrypt.compare(password, result[0].password, (error, response) => {
                 if (response) {
                     req.session.user = result
-                    res.send({message: "Bienvenue " + username + " !"})
+                    res.send({ message: "Bienvenue " + username + " !" })
                 } else {
-                    res.send({messageErr: "Erreur : Utilisateur ou mot de passe invalide !"})
+                    res.send({ messageErr: "Erreur : Utilisateur ou mot de passe invalide !" })
                 }
-            }) : res.send({messageErr: "Erreur : Utilisateur non reconnu !"});
+            }) : res.send({ messageErr: "Erreur : Utilisateur non reconnu !" });
         }
     )
 })
@@ -93,73 +94,98 @@ app.post('/logout', (req, res) => {
     if (req.session.user) {
         res.clearCookie('userId');
         req.session.destroy();
-        res.send({loggedIn: false, message: "Vous êtes bien déconnecté. A bientôt !"})
+        res.send({ loggedIn: false, message: "Vous êtes bien déconnecté. A bientôt !" })
     } else {
-        res.send({message: "Erreur : Veuillez essayer de vous reconnecter !"})
+        res.send({ message: "Erreur : Veuillez essayer de vous reconnecter !" })
     }
 })
 
 app.get('/login', (req, res) => {
-    req.session.user ? res.send({loggedIn: true, user: req.session.user}) : res.send({loggedIn: false})
+    req.session.user ? res.send({ loggedIn: true, user: req.session.user }) : res.send({ loggedIn: false })
 })
 
+// app.get('/skillsArray', (req, res) => {
+//     skillsDatabase.query(
+//         "Select numProc, libProc from processus",
+//         (err, rowsProc) => {
+//             for (let i in rowsProc) {
+//                 let promise = new Promise((resolve, reject) => {
+//                     skillsDatabase.query(
+//                         "Select processus.numProc, domaine.numDom, libDom from processus, domaine where domaine.numProc = processus.numProc and processus.numProc = " + rowsProc[i].numProc,
+//                         (err, rowsDom) => {
+//                             let arrayDom = [];
+//                             for (let x in rowsDom){
+//                                 dom = {numDom : rowsDom[x].numDom, libDom : rowsDom[x].libDom}
+//                                 arrayDom.push(dom)
+//                             }
+//                             resolve(arrayDom)
+//                         }
+//                     )
+//                 })
+//                 return promise.then((domaines) => {
+//                     for (let z in domaines){
+//                         let promise = new Promise((resolve, reject) => {
+//                             skillsDatabase.query(
+//                                 "Select distinct processus.numProc, domaine.numDom, numAct, libAct from processus, domaine, activite where activite.numDom = domaine.numDom and activite.numProc = processus.numProc and processus.numProc = " + rowsProc[i].numProc + " and domaine.numDom = " + domaines[z].numDom,
+//                                 (err, rowsAct) => {
+//                                     let arrayAct = [];
+//                                     for (let x in rowsAct){
+//                                         act = {numAct : rowsAct[x].numAct, libAct : rowsAct[x].libAct}
+//                                         arrayAct.push(act)
+//                                     }
+//                                     resolve(arrayAct)
+//                                 }
+//                             )
+//                         })
+//                         return promise.then((activites) => {
+//                             domaine = {domaine : domaines[z].libDom, activites};
+//                             z = z + 1;
+//                         })
+//                     }
+//                 }).then(() => {
+//                     raaa = {processus : rowsProc[i].libProc, domaine: domaine};
+//                 })
+//             }
+//             return i
+//         }
+//     )
+// })
 
-// SkillsArray
 app.get('/skillsArray', (req, res) => {
+    result = [];
     skillsDatabase.query(
         "Select numProc, libProc from processus",
-        (err, rowsProc) => {
-            let response = [];
-            let obj2;
-            if(rowsProc){
-                rowsProc.map(proc => {
-                    let promiseProc = new Promise ((resolve, reject) => {
-                        skillsDatabase.query(
-                            "Select domaine.numDom, libDom from processus, domaine where domaine.numProc = processus.numProc and processus.numProc = " + proc.numProc,
-                            (err, rowsDom) => {
-                                if(rowsDom){
-                                    rowsDom.map(dom => {
-                                        let promiseDom = new Promise((resolve, reject) => {
-                                            skillsDatabase.query(
-                                                "Select distinct processus.numProc, domaine.numDom, numAct, libAct from processus, domaine, activite where activite.numDom = domaine.numDom and activite.numProc = processus.numProc and processus.numProc = " + proc.numProc + " and domaine.numDom = " + dom.numDom,
-                                                (err, rowsAct) => {
-                                                    result = {domaine : dom, activites : [...rowsAct]}
-                                                    resolve(result)
-                                                    
-                                                },
-                                            )
-                                        });
-                                        return promiseDom.then((result) => {
-                                            obj2 = result
-                                        }).then(() => {
-                                            response.push(obj2)
-                                        })
-                                    })
-                                } else {
-
+        (err, rowsProc) => {  
+            for (let p in rowsProc){
+                proc = {processus : rowsProc[p].libProc};
+                result.push(proc);
+                skillsDatabase.query(
+                    "Select processus.numProc, domaine.numDom, libDom from processus, domaine where domaine.numProc = processus.numProc and processus.numProc = " + rowsProc[p].numProc,
+                    (err, rowsDom) => {
+                        arrayDom = [];
+                        for (let d in rowsDom){
+                            dom = {domaine : rowsDom[d].libDom}
+                            arrayDom.push(dom)
+                            skillsDatabase.query(
+                                "Select distinct processus.numProc, domaine.numDom, numAct, libAct from processus, domaine, activite where activite.numDom = domaine.numDom and activite.numProc = processus.numProc and processus.numProc = " + rowsProc[p].numProc + " and domaine.numDom = " + rowsDom[d].numDom,
+                                (err, rowsAct) => {
+                                    arrayAct = [];
+                                    for (let a in rowsAct){
+                                        act = rowsAct[a].libAct
+                                        arrayAct.push(act)
+                                    }
+                                    result[p].domaine[d].activite = arrayAct
                                 }
-                                console.log(response);
-                                let obj = {processus : proc, domaines : obj2}
-                                
-                                
-                                resolve(rowsDom)
-                            }
-                        );
-                    });
-                    return promiseProc.then((result) => {
-                        //console.log(response);
-                    }).then(()=>{
-                        //console.log(response);
-                    })
-                });
-                //response.push(rowsProc)
-                //console.log(rows);
-            } else {
-                res.send({err: err})
-            }    
+                            )
+                        }
+                        result[p].domaine = arrayDom
+                    }
+                )
+            }
         }
     )
 })
+
 
 // app.get('/skillsArray', (req, res) => {
 //     skillsDatabase.query(
@@ -175,7 +201,7 @@ app.get('/projects', (req, res) => {
     skillsDatabase.query(
         "Select id, libelle from projet",
         (err, data) => {
-            (data) ? res.json({data}) : res.send({err: err})
+            (data) ? res.json({ data }) : res.send({ err: err })
         }
     )
 })
@@ -185,6 +211,6 @@ app.post('/skillsArray', (req, res) => {
 })
 
 // Port output config
-app.listen(3003, ()=>{
+app.listen(3003, () => {
     console.log("Running server => port 3003");
 })
