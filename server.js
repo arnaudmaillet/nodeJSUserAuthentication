@@ -46,8 +46,7 @@ const skillsDatabase = mysql.createConnection({
     user: "root",
     host: "localhost",
     password: "",
-    database: "basecompetencessio",
-    multipleStatements: true
+    database: "basecompetencessio"
 })
 
 
@@ -104,97 +103,52 @@ app.get('/login', (req, res) => {
     req.session.user ? res.send({ loggedIn: true, user: req.session.user }) : res.send({ loggedIn: false })
 })
 
+
+// result = [];
 // app.get('/skillsArray', (req, res) => {
 //     skillsDatabase.query(
 //         "Select numProc, libProc from processus",
-//         (err, rowsProc) => {
-//             for (let i in rowsProc) {
-//                 let promise = new Promise((resolve, reject) => {
-//                     skillsDatabase.query(
-//                         "Select processus.numProc, domaine.numDom, libDom from processus, domaine where domaine.numProc = processus.numProc and processus.numProc = " + rowsProc[i].numProc,
-//                         (err, rowsDom) => {
-//                             let arrayDom = [];
-//                             for (let x in rowsDom){
-//                                 dom = {numDom : rowsDom[x].numDom, libDom : rowsDom[x].libDom}
-//                                 arrayDom.push(dom)
-//                             }
-//                             resolve(arrayDom)
-//                         }
-//                     )
-//                 })
-//                 return promise.then((domaines) => {
-//                     for (let z in domaines){
-//                         let promise = new Promise((resolve, reject) => {
+//         (err, rowsProc) => {  
+//             for (let p in rowsProc){
+//                 proc = {processus : rowsProc[p].libProc};
+//                 result.push(proc);
+//                 skillsDatabase.query(
+//                     "Select processus.numProc, domaine.numDom, libDom from processus, domaine where domaine.numProc = processus.numProc and processus.numProc = " + rowsProc[p].numProc,
+//                     (err, rowsDom) => {
+//                         arrayDom = [];
+//                         for (let d in rowsDom){
+//                             dom = {domaine : rowsDom[d].libDom}
+//                             arrayDom.push(dom)
 //                             skillsDatabase.query(
-//                                 "Select distinct processus.numProc, domaine.numDom, numAct, libAct from processus, domaine, activite where activite.numDom = domaine.numDom and activite.numProc = processus.numProc and processus.numProc = " + rowsProc[i].numProc + " and domaine.numDom = " + domaines[z].numDom,
+//                                 "Select distinct processus.numProc, domaine.numDom, numAct, libAct from processus, domaine, activite where activite.numDom = domaine.numDom and activite.numProc = processus.numProc and processus.numProc = " + rowsProc[p].numProc + " and domaine.numDom = " + rowsDom[d].numDom,
 //                                 (err, rowsAct) => {
-//                                     let arrayAct = [];
-//                                     for (let x in rowsAct){
-//                                         act = {numAct : rowsAct[x].numAct, libAct : rowsAct[x].libAct}
+//                                     arrayAct = [];
+//                                     for (let a in rowsAct){
+//                                         act = rowsAct[a].libAct
 //                                         arrayAct.push(act)
 //                                     }
-//                                     resolve(arrayAct)
+//                                     result[p].domaine[d].activite = arrayAct
 //                                 }
 //                             )
-//                         })
-//                         return promise.then((activites) => {
-//                             domaine = {domaine : domaines[z].libDom, activites};
-//                             z = z + 1;
-//                         })
+//                         }
+//                         result[p].domaine = arrayDom
 //                     }
-//                 }).then(() => {
-//                     raaa = {processus : rowsProc[i].libProc, domaine: domaine};
-//                 })
+//                 )
 //             }
-//             return i
 //         }
 //     )
 // })
 
+
+
 app.get('/skillsArray', (req, res) => {
-    result = [];
     skillsDatabase.query(
-        "Select numProc, libProc from processus",
-        (err, rowsProc) => {  
-            for (let p in rowsProc){
-                proc = {processus : rowsProc[p].libProc};
-                result.push(proc);
-                skillsDatabase.query(
-                    "Select processus.numProc, domaine.numDom, libDom from processus, domaine where domaine.numProc = processus.numProc and processus.numProc = " + rowsProc[p].numProc,
-                    (err, rowsDom) => {
-                        arrayDom = [];
-                        for (let d in rowsDom){
-                            dom = {domaine : rowsDom[d].libDom}
-                            arrayDom.push(dom)
-                            skillsDatabase.query(
-                                "Select distinct processus.numProc, domaine.numDom, numAct, libAct from processus, domaine, activite where activite.numDom = domaine.numDom and activite.numProc = processus.numProc and processus.numProc = " + rowsProc[p].numProc + " and domaine.numDom = " + rowsDom[d].numDom,
-                                (err, rowsAct) => {
-                                    arrayAct = [];
-                                    for (let a in rowsAct){
-                                        act = rowsAct[a].libAct
-                                        arrayAct.push(act)
-                                    }
-                                    result[p].domaine[d].activite = arrayAct
-                                }
-                            )
-                        }
-                        result[p].domaine = arrayDom
-                    }
-                )
-            }
+        'Select processus.numProc, processus.libProc, domaine.numDom, domaine.libDom, activite.numAct, activite.libAct from processus, domaine, activite where activite.numProc = processus.numProc and activite.numDom = domaine.numDom and processus.numProc = domaine.numProc;',
+        (err, data) => {           
+            (data) ? res.json({data}) : res.send({err: err});
         }
     )
 })
-
-
-// app.get('/skillsArray', (req, res) => {
-//     skillsDatabase.query(
-//         "Select libProc, libDom, libAct from processus, domaine, activite where activite.numProc = processus.numProc and activite.numDom = domaine.numDom",
-//         (err, data) => {           
-//             (data) ? res.json({data}) : res.send({err: err});
-//         }
-//     )
-// })
 
 
 app.get('/projects', (req, res) => {
@@ -206,8 +160,36 @@ app.get('/projects', (req, res) => {
     )
 })
 
-app.post('/skillsArray', (req, res) => {
+app.get('/estValide', (req, res) => {
+    skillsDatabase.query(
+        "Select numProc, numDom, numAct, idProjet, libelle from estValide, projet where estValide.idProjet = projet.id",
+        (err, data) => {
+            (data) ? res.json({ data }) : res.send({ err: err })
+        }
+    )
+})
 
+app.post('/setSkills', (req, res) => {
+    let array = [];
+    req.body.skills.map((skill) => (
+        val = [skill.numProc, skill.numDom, skill.numAct, skill.idProjet],
+        array.push(val)
+    ))
+    
+    skillsDatabase.query(
+        "TRUNCATE TABLE estValide",
+        (err, result) => {
+            result ? 
+            skillsDatabase.query(
+                "INSERT INTO estValide (numProc, numDom, numAct, idProjet) VALUES ?", [array],
+                (err, result) => {
+                    result ? res.send({ message: "Données enregistrées" }) : res.send({err})
+                }
+            )
+            :
+            res.send({err})
+        }
+    )
 })
 
 // Port output config
