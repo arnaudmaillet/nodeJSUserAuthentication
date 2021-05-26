@@ -16,7 +16,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-    origin: ["https://monsite80.fr/"],
+    origin: ["http://localhost:3000"],
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -35,22 +35,27 @@ app.use(session({
 
 // loginsystem DataBase connection
 const loginsystemDatabase = mysql.createConnection({
-    user: "admin",
-    host: "ma1809839-001.dbaas.ovh.net",
-    port: '35462',
-    password: "65SZfjEJBz",
+    user: "newuser",
+    host: "localhost",
+    password: "password",
     database: "loginsystem"
 })
 
 // Skills DataBase connection
 const skillsDatabase = mysql.createConnection({
-    user: "admin",
-    host: "ma1809839-001.dbaas.ovh.net",
-    port: '35462',
-    password: "65SZfjEJBz",
+    user: "newuser",
+    host: "localhost",
+    password: "password",
     database: "basecompetencessio"
 })
 
+if (loginsystemDatabase.connect((err) => {
+    if (err) throw err
+}))
+
+if (skillsDatabase.connect((err) => {
+    if (err) throw err
+}))
 
 // Register
 app.post('/register', (req, res) => {
