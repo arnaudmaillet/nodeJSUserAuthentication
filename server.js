@@ -1,6 +1,14 @@
+var fs = require('fs');
+var http = require('http');
+var https = require('https');
+var privateKey  = fs.readFileSync('sslcert/server.key', 'utf8');
+var certificate = fs.readFileSync('sslcert/server.crt', 'utf8');
+var credentials = {key: privateKey, cert: certificate};
+
 const express = require('express');
 const mysql = require('mysql');
 const cors = require('cors');
+
 
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
@@ -195,7 +203,12 @@ app.post('/setSkills', (req, res) => {
     )
 })
 
+
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(credentials, app);
+
+httpServer.listen(3002);
 // Port output config
-app.listen(3003, () => {
+httpsServer.listen(3003, () => {
     console.log("Running server => port 3003");
 })
