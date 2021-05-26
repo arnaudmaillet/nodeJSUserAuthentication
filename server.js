@@ -78,14 +78,16 @@ app.post('/login', (req, res) => {
         username,
         (err, result) => {
             err ? res.send({ err: err }) : null;
-            result.length > 0 ? bcrypt.compare(password, result[0].password, (error, response) => {
-                if (response) {
+            if (result.length > 0){
+                if (result[0].password === password){
                     req.session.user = result
                     res.send({ message: "Bienvenue " + username + " !" })
                 } else {
                     res.send({ messageErr: "Erreur : Utilisateur ou mot de passe invalide !" })
                 }
-            }) : res.send({ messageErr: "Erreur : Utilisateur non reconnu !" });
+            } else {
+                res.send({ messageErr: "Erreur : Utilisateur non reconnu !" });
+            }
         }
     )
 })
