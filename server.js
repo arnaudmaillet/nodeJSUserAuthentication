@@ -165,7 +165,7 @@ app.get('/projects', (req, res) => {
 
 app.get('/estValide', (req, res) => {
     skillsDatabase.query(
-        "Select numProc, numDom, numAct, numComp, idProjet, libelle from estValide, projet where estValide.idProjet = projet.id",
+        "Select numProc, numDom, numAct, numComp, idProjet, libelle from estvalide, projet where estvalide.idProjet = projet.id",
         (err, data) => {
             (data) ? res.json({ data }) : res.send({ err: err })
         }
@@ -180,11 +180,11 @@ app.post('/setSkills', (req, res) => {
     ))
     
     skillsDatabase.query(
-        "TRUNCATE TABLE estValide",
+        "TRUNCATE TABLE estvalide",
         (err, result) => {
             result ? 
             skillsDatabase.query(
-                "INSERT INTO estValide (numProc, numDom, numAct, numComp, idProjet) VALUES ?", [array],
+                "INSERT INTO estvalide (numProc, numDom, numAct, numComp, idProjet) VALUES ?", [array],
                 (err, result) => {
                     result ? res.send({ message: "Données enregistrées" }) : res.send({err})
                 }
