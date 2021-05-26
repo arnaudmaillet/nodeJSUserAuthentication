@@ -13,7 +13,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-    origin: ["http://monsite80.fr/"],
+    origin: "http://monsite80.fr",
     methods: ['GET', 'POST'],
     credentials: true
 }));
