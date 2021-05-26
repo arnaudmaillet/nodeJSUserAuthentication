@@ -16,7 +16,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-    origin: ["http://localhost:3000"],
+    origin: ["https://monsite80.fr/"],
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -35,17 +35,19 @@ app.use(session({
 
 // loginsystem DataBase connection
 const loginsystemDatabase = mysql.createConnection({
-    user: "root",
-    host: "localhost",
-    password: "",
+    user: "admin",
+    host: "ma1809839-001.dbaas.ovh.net",
+    port: '35462',
+    password: "65SZfjEJBz",
     database: "loginsystem"
 })
 
 // Skills DataBase connection
 const skillsDatabase = mysql.createConnection({
-    user: "root",
-    host: "localhost",
-    password: "",
+    user: "admin",
+    host: "ma1809839-001.dbaas.ovh.net",
+    port: '35462',
+    password: "65SZfjEJBz",
     database: "basecompetencessio"
 })
 
@@ -143,7 +145,7 @@ app.get('/login', (req, res) => {
 
 app.get('/skillsArray', (req, res) => {
     skillsDatabase.query(
-        'Select processus.numProc, processus.libProc, domaine.numDom, domaine.libDom, activite.numAct, activite.libAct from processus, domaine, activite where activite.numProc = processus.numProc and activite.numDom = domaine.numDom and processus.numProc = domaine.numProc;',
+        'Select processus.numProc, processus.libProc, domaine.numDom, domaine.libDom, activite.numAct, activite.libAct, competence.numComp, competence.libComp from processus, domaine, activite, competence where processus.numProc = domaine.numProc and processus.numProc = activite.numProc and processus.numProc = competence.numProc and domaine.numDom = activite.numDom and domaine.numDom = competence.numDom and activite.numAct = competence.numAct;',
         (err, data) => {           
             (data) ? res.json({data}) : res.send({err: err});
         }
@@ -162,7 +164,7 @@ app.get('/projects', (req, res) => {
 
 app.get('/estValide', (req, res) => {
     skillsDatabase.query(
-        "Select numProc, numDom, numAct, idProjet, libelle from estValide, projet where estValide.idProjet = projet.id",
+        "Select numProc, numDom, numAct, numComp, idProjet, libelle from estValide, projet where estValide.idProjet = projet.id",
         (err, data) => {
             (data) ? res.json({ data }) : res.send({ err: err })
         }
@@ -172,7 +174,7 @@ app.get('/estValide', (req, res) => {
 app.post('/setSkills', (req, res) => {
     let array = [];
     req.body.skills.map((skill) => (
-        val = [skill.numProc, skill.numDom, skill.numAct, skill.idProjet],
+        val = [skill.numProc, skill.numDom, skill.numAct, skill.numComp, skill.idProjet],
         array.push(val)
     ))
     
@@ -181,7 +183,7 @@ app.post('/setSkills', (req, res) => {
         (err, result) => {
             result ? 
             skillsDatabase.query(
-                "INSERT INTO estValide (numProc, numDom, numAct, idProjet) VALUES ?", [array],
+                "INSERT INTO estValide (numProc, numDom, numAct, numComp, idProjet) VALUES ?", [array],
                 (err, result) => {
                     result ? res.send({ message: "Données enregistrées" }) : res.send({err})
                 }
