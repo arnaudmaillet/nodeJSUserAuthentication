@@ -6,17 +6,13 @@ const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
 
-// Init Bcryot (Encryption package)
-const bcrypt = require('bcrypt')
-const salt = 10
-
 // Init const express
 const app = express();
 
 
 app.use(express.json());
 app.use(cors({
-    origin: ["http://localhost:3000"],
+    origin: ["https://monsite80.fr/"],
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -62,15 +58,13 @@ app.post('/register', (req, res) => {
     const username = req.body.username
     const password = req.body.password
 
-    bcrypt.hash(password, salt, (err, hash) => {
-        loginsystemDatabase.query(
-            "INSERT INTO user (username, password) VALUES (?,?)",
-            [username, hash],
-            (err, result) => {
-                result ? res.send({ message: "Bienvenue " + username + " ! Votre compte a bien été créé !" }) : res.send({ err: err });
-            }
-        )
-    })
+    loginsystemDatabase.query(
+        "INSERT INTO user (username, password) VALUES (?,?)",
+        [username, password],
+        (err, result) => {
+            result ? res.send({ message: "Bienvenue " + username + " ! Votre compte a bien été créé !" }) : res.send({ err: err });
+        }
+    )
 })
 
 
