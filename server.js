@@ -37,7 +37,7 @@ app.use(session({
 const loginsystemDatabase = mysql.createConnection({
     user: "newuser",
     host: "localhost",
-    password: "password",
+    password: "Darkvadormir1",
     database: "loginsystem"
 })
 
