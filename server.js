@@ -10,6 +10,9 @@ const session = require('express-session')
 // Init const express
 const app = express();
 
+const https = require('https')
+const path = require('path')
+const fs = require('fs')
 
 app.use(express.json());
 app.use(cors({
@@ -196,7 +199,12 @@ app.post('/setSkills', (req, res) => {
     )
 })
 
+const sslServer = https.createServer({
+    key: fs.readFileSync(path.join(__dirname, 'cert', 'key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, 'cert', 'cert.pem'))
+}, app)
+
 // Port output config
-app.listen(3003, () => {
+sslServer.listen(3003, () => {
     console.log("Running server => port 3003");
 })
