@@ -16,7 +16,7 @@ const fs = require('fs')
 
 app.use(express.json());
 app.use(cors({
-    origin: "http://monsite80.fr",
+    origin: "https://monsite80.fr",
     methods: ['GET', 'POST'],
     credentials: true
 }));
