@@ -45,7 +45,7 @@ const loginsystemDatabase = mysql.createConnection({
 const skillsDatabase = mysql.createConnection({
     user: "newuser",
     host: "localhost",
-    password: "password",
+    password: "Darkvadormir1",
     database: "basecompetencessio"
 })
 
