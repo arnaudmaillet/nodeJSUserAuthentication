@@ -199,6 +199,6 @@ app.post('/setSkills', (req, res) => {
 
 
 // Port output config
-app.listen(3003, () => {
-    console.log("Running server => port 3003");
+app.listen(80, () => {
+    console.log("Running server => port 80");
 })
